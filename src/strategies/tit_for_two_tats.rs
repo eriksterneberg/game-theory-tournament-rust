@@ -2,24 +2,24 @@ use crate::strategies::{Action, Strategy};
 
 #[derive(Debug)]
 
-pub struct TitForTat {
-    pub retaliate: bool,
+pub struct TitFor2Tats {
+    patience: i32,
 }
 
-impl Strategy for TitForTat {
+impl Strategy for TitFor2Tats {
     fn name(&self) -> String {
-        String::from("Tit for Tat")
+        String::from("Tit for 2 Tats")
     }
 
     fn put(&mut self, action: &Action) {
         match action {
-            Action::Defect => self.retaliate = true,
-            Action::Cooperate => self.retaliate = false,
+            Action::Defect => self.patience -= 1,
+            Action::Cooperate => self.patience = 2,
         }
     }
 
     fn get(&self) -> Action {
-        if self.retaliate {
+        if self.patience <= 0 {
             Action::Defect
         } else {
             Action::Cooperate
@@ -27,8 +27,8 @@ impl Strategy for TitForTat {
     }
 }
 
-impl TitForTat {
+impl TitFor2Tats {
     pub fn new() -> Self {
-        TitForTat { retaliate: false }
+        TitFor2Tats { patience: 2 }
     }
 }

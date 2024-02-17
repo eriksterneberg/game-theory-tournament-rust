@@ -1,16 +1,26 @@
 use crate::strategies::always_cooperate::AlwaysCooperate;
+use crate::strategies::always_defect::AlwaysDefect;
 use crate::strategies::tit_for_tat::TitForTat;
+use crate::strategies::tit_for_two_tats::TitFor2Tats;
 use crate::strategies::{Action, Strategy};
 use std::collections::HashMap;
 
 mod strategies;
 
 fn main() {
-    let mut strategies: Vec<Box<dyn Strategy>> =
-        vec![Box::new(AlwaysCooperate::new()), Box::new(TitForTat::new())];
+    let mut strategies: Vec<Box<dyn Strategy>> = vec![
+        // Box::new(AlwaysCooperate::new()),
+        Box::new(TitForTat::new()),
+        Box::new(TitFor2Tats::new()),
+        Box::new(AlwaysDefect::new()),
+    ];
 
-    let mut strategies2: Vec<Box<dyn Strategy>> =
-        vec![Box::new(AlwaysCooperate::new()), Box::new(TitForTat::new())];
+    let mut strategies2: Vec<Box<dyn Strategy>> = vec![
+        // Box::new(AlwaysCooperate::new()),
+        Box::new(TitForTat::new()),
+        Box::new(TitFor2Tats::new()),
+        Box::new(AlwaysDefect::new()),
+    ];
 
     // for mut strategy in &strategies {
     //     println!(
@@ -30,13 +40,13 @@ fn main() {
 
     for mut i in &mut strategies {
         for mut j in &mut strategies2 {
-            if i.name() == j.name() {
-                continue;
-            }
+            // if i.name() == j.name() {
+            //     continue;
+            // }
 
             println!("Executing battle: {} vs {}", i.name(), j.name());
 
-            for _ in 0..20 {
+            for _ in 0..200 {
                 let action = i.get();
                 let reaction = j.get();
                 i.put(&reaction);
@@ -67,6 +77,11 @@ fn main() {
     }
 
     println!("Tournament finished");
+
+    // I have a hashmap with values and scores. I want to sort by scores and print the results
+    let mut scores: Vec<_> = scores.into_iter().collect();
+    scores.sort_by(|a, b| b.1.cmp(&a.1));
+
     for (player, score) in &scores {
         println!("{}\t{}", score, player);
     }
