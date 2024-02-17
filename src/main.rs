@@ -5,10 +5,13 @@ use crate::strategies::tit_for_tat::TitForTat;
 use crate::strategies::tit_for_two_tats::TitFor2Tats;
 use crate::strategies::{Action, Strategy};
 use std::collections::HashMap;
+use std::env;
 
 mod strategies;
 
 fn main() {
+    let parameters = parse_args();
+
     // Get two lists of strategies to iterate over. All strategies battle all strategies, including self.
     let mut strategies = get_strategies();
     let mut strategies2 = get_strategies();
@@ -20,7 +23,7 @@ fn main() {
 
     for i in &mut strategies {
         for j in &mut strategies2 {
-            let (i_score, j_score) = battle(i, j);
+            let (i_score, j_score) = battle(i, j, &parameters);
             add_score(&mut scores, i.name(), i_score);
             add_score(&mut scores, j.name(), j_score);
         }
@@ -31,18 +34,58 @@ fn main() {
     print_scores(&scores);
 }
 
+struct Parameters {
+    iterations: i32,
+    verbose: bool,
+}
+
+// Parse command line parameter --iterations
+fn parse_args() -> Parameters {
+    let args: Vec<String> = env::args().collect();
+    let mut iterations = 20; // Default value
+    let mut verbose = false;
+
+    for (index, arg) in args.iter().enumerate() {
+        if arg == "--iterations" {
+            if let Some(value) = args.get(index + 1) {
+                iterations = value.parse().unwrap_or_else(|_| {
+                    eprintln!("Error: Invalid value for iterations");
+                    std::process::exit(1);
+                });
+            } else {
+                eprintln!("Error: Missing value for --iterations");
+                std::process::exit(1);
+            }
+        }
+
+        if arg == "--verbose" {
+            verbose = true;
+        }
+    }
+    Parameters {
+        iterations,
+        verbose,
+    }
+}
+
 /// Executes battle between two strategies
 ///
 /// If both sides cooperate, they each score 3 points.
 /// If one side defects while the other cooperates, they get 5 and 0 points respectively
 /// If both sides defect, they each score just 1 point.
-fn battle(i: &mut Box<dyn Strategy>, j: &mut Box<dyn Strategy>) -> (i32, i32) {
-    println!("Executing battle: {} vs {}", i.name(), j.name());
+fn battle(
+    i: &mut Box<dyn Strategy>,
+    j: &mut Box<dyn Strategy>,
+    parameters: &Parameters,
+) -> (i32, i32) {
+    if parameters.verbose {
+        println!("Executing battle: {} vs {}", i.name(), j.name());
+    }
 
     let mut i_score = 0;
     let mut j_score = 0;
 
-    for _ in 0..200 {
+    for _ in 0..parameters.iterations {
         let action = i.get();
         let reaction = j.get();
         i.put(&reaction);
@@ -50,21 +93,29 @@ fn battle(i: &mut Box<dyn Strategy>, j: &mut Box<dyn Strategy>) -> (i32, i32) {
 
         match (action, reaction) {
             (Action::Cooperate, Action::Cooperate) => {
-                println!("Both players cooperated! Will assign both 3 points each.");
+                if parameters.verbose {
+                    println!("Both players cooperated! Will assign both 3 points each.");
+                }
                 i_score += 3;
                 j_score += 3;
             }
             (Action::Defect, Action::Defect) => {
-                println!("Both defected, so both get a single point.");
+                if parameters.verbose {
+                    println!("Both players defected! Will assign both 1 point each.");
+                }
                 i_score += 1;
                 j_score += 1;
             }
             (Action::Cooperate, Action::Defect) => {
-                println!("One defected and gets 5, one cooperated and gets zero");
+                if parameters.verbose {
+                    println!("One defected and gets 5, one cooperated and gets zero");
+                }
                 j_score += 5;
             }
             (Action::Defect, Action::Cooperate) => {
-                println!("One defected and gets 5, one cooperated and gets zero");
+                if parameters.verbose {
+                    println!("One defected and gets 5, one cooperated and gets zero");
+                }
                 i_score += 5;
             }
         }
@@ -86,10 +137,10 @@ fn battle(i: &mut Box<dyn Strategy>, j: &mut Box<dyn Strategy>) -> (i32, i32) {
 /// This is the only way to return a vector of different types.
 fn get_strategies() -> Vec<Box<dyn Strategy>> {
     vec![
-        Box::new(AlwaysCooperate::new()),
+        // Box::new(AlwaysCooperate::new()),
         Box::new(HoldsGrudge::new()),
-        Box::new(TitForTat::new()),
-        Box::new(TitFor2Tats::new()),
+        // Box::new(TitForTat::new()),
+        // Box::new(TitFor2Tats::new()),
         Box::new(AlwaysDefect::new()),
     ]
 }
