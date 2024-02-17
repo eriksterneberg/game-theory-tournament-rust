@@ -25,6 +25,10 @@ impl Strategy for TitFor2Tats {
             Action::Cooperate
         }
     }
+
+    fn reset(&mut self) {
+        self.patience = 2;
+    }
 }
 
 impl TitFor2Tats {

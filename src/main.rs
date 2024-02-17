@@ -78,6 +78,10 @@ fn battle(
     j: &mut Box<dyn Strategy>,
     parameters: &Parameters,
 ) -> (i32, i32) {
+    // Reset the strategies for the next round
+    i.reset();
+    j.reset();
+
     if parameters.verbose {
         println!("Executing battle: {} vs {}", i.name(), j.name());
     }
@@ -120,6 +124,7 @@ fn battle(
             }
         }
     }
+
     return (i_score, j_score);
 }
 
@@ -137,10 +142,10 @@ fn battle(
 /// This is the only way to return a vector of different types.
 fn get_strategies() -> Vec<Box<dyn Strategy>> {
     vec![
-        // Box::new(AlwaysCooperate::new()),
+        Box::new(AlwaysCooperate::new()),
         Box::new(HoldsGrudge::new()),
-        // Box::new(TitForTat::new()),
-        // Box::new(TitFor2Tats::new()),
+        Box::new(TitForTat::new()),
+        Box::new(TitFor2Tats::new()),
         Box::new(AlwaysDefect::new()),
     ]
 }

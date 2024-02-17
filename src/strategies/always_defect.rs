@@ -13,6 +13,8 @@ impl Strategy for AlwaysDefect {
     fn get(&self) -> Action {
         Action::Defect
     }
+
+    fn reset(&mut self) {}
 }
 
 impl AlwaysDefect {

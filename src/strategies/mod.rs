@@ -20,4 +20,7 @@ pub trait Strategy {
 
     // Based on the past actions taken against the strategy, return a new action
     fn get(&self) -> Action;
+
+    // Resets the strategy to an init state
+    fn reset(&mut self);
 }

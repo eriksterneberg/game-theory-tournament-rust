@@ -26,6 +26,10 @@ impl Strategy for HoldsGrudge {
             Action::Cooperate
         }
     }
+
+    fn reset(&mut self) {
+        self.grudge = false;
+    }
 }
 
 impl HoldsGrudge {

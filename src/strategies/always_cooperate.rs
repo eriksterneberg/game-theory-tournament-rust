@@ -13,6 +13,8 @@ impl Strategy for AlwaysCooperate {
     fn get(&self) -> Action {
         Action::Cooperate
     }
+
+    fn reset(&mut self) {}
 }
 
 impl AlwaysCooperate {

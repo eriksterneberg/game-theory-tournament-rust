@@ -25,6 +25,10 @@ impl Strategy for TitForTat {
             Action::Cooperate
         }
     }
+
+    fn reset(&mut self) {
+        self.retaliate = false;
+    }
 }
 
 impl TitForTat {
