@@ -104,18 +104,10 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
 /// - If both sides defect, they each score just 1 point.
 fn score(action: Action, reaction: Action) -> (i32, i32) {
     match (action, reaction) {
-        (Action::Cooperate, Action::Cooperate) | (Action::Defect, Action::Defect) => {
-            let points = if action == Action::Cooperate { 3 } else { 1 };
-            (points, points)
-        }
-        (_, _) => {
-            let (defector, cooperator) = if action == Action::Defect {
-                (5, 0)
-            } else {
-                (0, 5)
-            };
-            (defector, cooperator)
-        }
+        (Action::Cooperate, Action::Cooperate) => (3, 3),
+        (Action::Defect, Action::Defect) => (1, 1),
+        (Action::Cooperate, Action::Defect) => (0, 5),
+        (Action::Defect, Action::Cooperate) => (5, 0),
     }
 }
 
