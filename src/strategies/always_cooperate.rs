@@ -16,8 +16,4 @@ impl AlwaysCooperate {
     pub fn new() -> Self {
         Self {}
     }
-
-    pub fn name() -> String {
-        String::from("Always Cooperate")
-    }
 }

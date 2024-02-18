@@ -40,31 +40,26 @@ struct Parameters {
 
 /// Parse command line parameter --iterations and --verbose
 fn parse_args() -> Parameters {
-    let args: Vec<String> = env::args().collect();
-    let mut iterations = 20; // Default value
-    let mut verbose = false;
+    let mut args = env::args().peekable();
+    let mut parameters = Parameters {
+        iterations: 20,
+        verbose: false,
+    };
 
-    for (index, arg) in args.iter().enumerate() {
-        if arg == "--iterations" {
-            if let Some(value) = args.get(index + 1) {
-                iterations = value.parse().unwrap_or_else(|_| {
-                    eprintln!("Error: Invalid value for iterations");
-                    std::process::exit(1);
-                });
-            } else {
-                eprintln!("Error: Missing value for --iterations");
-                std::process::exit(1);
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--iterations" => {
+                parameters.iterations =
+                    args.next().and_then(|s| s.parse().ok()).unwrap_or_else(|| {
+                        eprintln!("Error: Invalid value for iterations");
+                        std::process::exit(1);
+                    });
             }
-        }
-
-        if arg == "--verbose" {
-            verbose = true;
+            "--verbose" => parameters.verbose = true,
+            _ => (),
         }
     }
-    Parameters {
-        iterations,
-        verbose,
-    }
+    parameters
 }
 
 /// Executes battle between two strategies
