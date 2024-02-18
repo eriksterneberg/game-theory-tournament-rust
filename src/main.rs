@@ -16,18 +16,13 @@ mod strategies;
 fn main() {
     let parameters = parse_args();
 
-    println!("Strategies: {:?}", get_strategies());
-
-    let strategies = get_strategies();
-    let strategies2 = get_strategies();
-
     // Keep a list of the scores
     let mut score_board = Scoreboard::default();
 
     println!("Starting tournament");
 
     // All strategies battle all strategies, including itself
-    for (i, j) in iproduct!(strategies, strategies2) {
+    for (i, j) in iproduct!(get_strategies(), get_strategies()) {
         let (i_score, j_score) = battle(i, j, parameters);
 
         score_board.add_score(i, i_score);
