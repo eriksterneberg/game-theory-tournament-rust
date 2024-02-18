@@ -12,15 +12,9 @@ pub enum Action {
 }
 
 pub trait Strategy {
-    // Name of the strategy. Needed to keep score.
-    fn name(&self) -> String;
-
     // Here we will tell the strategy what the previous action taken against was
     fn put(&mut self, action: &Action);
 
     // Based on the past actions taken against the strategy, return a new action
     fn get(&self) -> Action;
-
-    // Resets the strategy to an init state
-    fn reset(&mut self);
 }

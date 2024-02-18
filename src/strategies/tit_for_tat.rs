@@ -7,10 +7,6 @@ pub struct TitForTat {
 }
 
 impl Strategy for TitForTat {
-    fn name(&self) -> String {
-        String::from("Tit for Tat")
-    }
-
     fn put(&mut self, action: &Action) {
         match action {
             Action::Defect => self.retaliate = true,
@@ -24,10 +20,6 @@ impl Strategy for TitForTat {
         } else {
             Action::Cooperate
         }
-    }
-
-    fn reset(&mut self) {
-        self.retaliate = false;
     }
 }
 

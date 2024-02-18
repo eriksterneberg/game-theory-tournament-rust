@@ -8,10 +8,6 @@ pub struct HoldsGrudge {
 }
 
 impl Strategy for HoldsGrudge {
-    fn name(&self) -> String {
-        String::from("Holds Grudge")
-    }
-
     fn put(&mut self, action: &Action) {
         match action {
             Action::Defect => self.grudge = true,
@@ -25,10 +21,6 @@ impl Strategy for HoldsGrudge {
         } else {
             Action::Cooperate
         }
-    }
-
-    fn reset(&mut self) {
-        self.grudge = false;
     }
 }
 

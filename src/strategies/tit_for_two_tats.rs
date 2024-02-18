@@ -7,10 +7,6 @@ pub struct TitFor2Tats {
 }
 
 impl Strategy for TitFor2Tats {
-    fn name(&self) -> String {
-        String::from("Tit for 2 Tats")
-    }
-
     fn put(&mut self, action: &Action) {
         match action {
             Action::Defect => self.patience -= 1,
@@ -24,10 +20,6 @@ impl Strategy for TitFor2Tats {
         } else {
             Action::Cooperate
         }
-    }
-
-    fn reset(&mut self) {
-        self.patience = 2;
     }
 }
 

@@ -22,8 +22,9 @@ fn main() {
     for i in StrategyEnum::iter() {
         for j in StrategyEnum::iter() {
             let (i_score, j_score) = battle(i, j, &parameters);
-            add_score(&mut scores, i, i_score);
-            add_score(&mut scores, j, j_score);
+
+            *(scores.entry(i).or_insert(0)) += i_score;
+            *(scores.entry(j).or_insert(0)) += j_score;
         }
     }
 
@@ -71,22 +72,27 @@ fn parse_args() -> Parameters {
 /// If both sides cooperate, they each score 3 points.
 /// If one side defects while the other cooperates, they get 5 and 0 points respectively
 /// If both sides defect, they each score just 1 point.
-fn battle(i_name: StrategyEnum, j_name: StrategyEnum, parameters: &Parameters) -> (i32, i32) {
-    let mut i = get_strategy(i_name);
-    let mut j = get_strategy(j_name);
-
+fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -> (i32, i32) {
     if parameters.verbose {
-        println!("Executing battle: {} vs {}", i.name(), j.name());
+        println!("Executing battle: {:?} vs {:?}", i_enum, j_enum);
     }
 
+    // Create strategies
+    let mut i = get_strategy(i_enum);
+    let mut j = get_strategy(j_enum);
+
+    // Keep score
     let mut i_score = 0;
     let mut j_score = 0;
 
     for _ in 0..parameters.iterations {
+        // First player makes a move
         let action = i.get();
+        j.put(&action);
+
+        // Second player makes a move
         let reaction = j.get();
         i.put(&reaction);
-        j.put(&action);
 
         match (action, reaction) {
             (Action::Cooperate, Action::Cooperate) => {
@@ -122,12 +128,6 @@ fn battle(i_name: StrategyEnum, j_name: StrategyEnum, parameters: &Parameters) -
 }
 
 /// 顾名思义 -- As the name suggests
-fn add_score(scores: &mut HashMap<StrategyEnum, i32>, player: StrategyEnum, score: i32) {
-    let entry = scores.entry(player).or_insert(0);
-    *entry += score;
-}
-
-/// 顾名思义 -- As the name suggests
 fn print_scores(scores: &HashMap<StrategyEnum, i32>) {
     let mut scores: Vec<_> = scores.into_iter().collect();
     scores.sort_by(|a, b| b.1.cmp(&a.1));
@@ -135,10 +135,6 @@ fn print_scores(scores: &HashMap<StrategyEnum, i32>) {
     for (player, score) in &scores {
         println!("{}\t{:?}", score, player);
     }
-}
-
-pub struct StrategyEnumIterator {
-    index: usize,
 }
 
 impl StrategyEnum {
