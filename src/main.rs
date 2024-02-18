@@ -4,10 +4,19 @@ use crate::strategies::holds_grudge::HoldsGrudge;
 use crate::strategies::tit_for_tat::TitForTat;
 use crate::strategies::tit_for_two_tats::TitFor2Tats;
 use crate::strategies::{Action, Strategy};
+use itertools::iproduct;
 use std::collections::HashMap;
 use std::env;
 
 mod strategies;
+
+static STRATEGIES: [StrategyEnum; 5] = [
+    StrategyEnum::AlwaysCooperate,
+    StrategyEnum::HoldsGrudge,
+    StrategyEnum::TitForTat,
+    StrategyEnum::TitFor2Tats,
+    StrategyEnum::AlwaysDefect,
+];
 
 fn main() {
     let parameters = parse_args();
@@ -19,13 +28,11 @@ fn main() {
 
     // Get two lists of strategies to iterate over. All strategies battle all strategies, including self.
     // Use iterator instead of function that returns vector for memory efficiency
-    for i in StrategyEnum::iter() {
-        for j in StrategyEnum::iter() {
-            let (i_score, j_score) = battle(i, j, parameters);
+    for (i, j) in iproduct!(STRATEGIES, STRATEGIES) {
+        let (i_score, j_score) = battle(i, j, parameters);
 
-            *(scores.entry(i).or_insert(0)) += i_score;
-            *(scores.entry(j).or_insert(0)) += j_score;
-        }
+        *(scores.entry(i).or_insert(0)) += i_score;
+        *(scores.entry(j).or_insert(0)) += j_score;
     }
 
     println!("Tournament finished");
@@ -69,10 +76,9 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
     }
 
     // Create strategies
-    let mut i = get_strategy(i_enum);
-    let mut j = get_strategy(j_enum);
+    let (mut i, mut j) = (get_strategy(i_enum), get_strategy(j_enum));
 
-    // Keep scor
+    // Keep score
     // Fold over the range of iterations to accumulate scores
     (0..parameters.iterations).fold((0, 0), |(i_score, j_score), _| {
         // First player makes a move
@@ -113,23 +119,6 @@ fn print_scores(scores: &HashMap<StrategyEnum, i32>) {
 
     for (player, score) in &scores {
         println!("{}\t{:?}", score, player);
-    }
-}
-
-/// An iterator over the strategies
-///
-/// Unfortunately, we can't use the derive macro to implement the iterator trait for the enum,
-/// so we have to implement it manually.
-impl StrategyEnum {
-    pub fn iter() -> impl Iterator<Item = StrategyEnum> {
-        let variants = [
-            StrategyEnum::AlwaysCooperate,
-            StrategyEnum::HoldsGrudge,
-            StrategyEnum::TitForTat,
-            StrategyEnum::TitFor2Tats,
-            StrategyEnum::AlwaysDefect,
-        ];
-        variants.into_iter()
     }
 }
 
