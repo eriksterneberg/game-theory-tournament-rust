@@ -4,8 +4,7 @@ pub mod holds_grudge;
 pub mod tit_for_tat;
 pub mod tit_for_two_tats;
 
-#[derive(Debug)]
-
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Action {
     Cooperate,
     Defect,

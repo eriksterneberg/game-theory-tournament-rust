@@ -21,7 +21,7 @@ fn main() {
     // Use iterator instead of function that returns vector for memory efficiency
     for i in StrategyEnum::iter() {
         for j in StrategyEnum::iter() {
-            let (i_score, j_score) = battle(i, j, &parameters);
+            let (i_score, j_score) = battle(i, j, parameters);
 
             *(scores.entry(i).or_insert(0)) += i_score;
             *(scores.entry(j).or_insert(0)) += j_score;
@@ -32,6 +32,7 @@ fn main() {
 
     print_scores(&scores);
 }
+#[derive(Clone, Copy)]
 struct Parameters {
     iterations: i32,
     verbose: bool,
@@ -67,11 +68,7 @@ fn parse_args() -> Parameters {
 }
 
 /// Executes battle between two strategies
-///
-/// If both sides cooperate, they each score 3 points.
-/// If one side defects while the other cooperates, they get 5 and 0 points respectively
-/// If both sides defect, they each score just 1 point.
-fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -> (i32, i32) {
+fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) -> (i32, i32) {
     if parameters.verbose {
         println!("Executing battle: {:?} vs {:?}", i_enum, j_enum);
     }
@@ -80,50 +77,46 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -
     let mut i = get_strategy(i_enum);
     let mut j = get_strategy(j_enum);
 
-    // Keep score
-    let mut i_score = 0;
-    let mut j_score = 0;
-
-    for _ in 0..parameters.iterations {
+    // Keep scor
+    // Fold over the range of iterations to accumulate scores
+    (0..parameters.iterations).fold((0, 0), |(i_score, j_score), _| {
         // First player makes a move
-        let action = i.get();
-        j.put(&action);
+        let action_i = i.get();
+        j.put(&action_i);
 
         // Second player makes a move
-        let reaction = j.get();
-        i.put(&reaction);
+        let action_j = j.get();
+        i.put(&action_j);
 
-        match (action, reaction) {
-            (Action::Cooperate, Action::Cooperate) => {
-                if parameters.verbose {
-                    println!("Both players cooperated! Will assign both 3 points each.");
-                }
-                i_score += 3;
-                j_score += 3;
-            }
-            (Action::Defect, Action::Defect) => {
-                if parameters.verbose {
-                    println!("Both players defected! Will assign both 1 point each.");
-                }
-                i_score += 1;
-                j_score += 1;
-            }
-            (Action::Cooperate, Action::Defect) => {
-                if parameters.verbose {
-                    println!("One defected and gets 5, one cooperated and gets zero");
-                }
-                j_score += 5;
-            }
-            (Action::Defect, Action::Cooperate) => {
-                if parameters.verbose {
-                    println!("One defected and gets 5, one cooperated and gets zero");
-                }
-                i_score += 5;
-            }
+        // Score the round
+        let (i_, j_) = score(action_i, action_j);
+
+        // Return the updated scores
+        (i_score + i_, j_score + j_)
+    })
+}
+
+/// Scores the actions of two players
+///
+/// Rules:
+/// - If both sides cooperate, they each score 3 points.
+/// - If one side defects while the other cooperates, they get 5 and 0 points respectively
+/// - If both sides defect, they each score just 1 point.
+fn score(action: Action, reaction: Action) -> (i32, i32) {
+    match (action, reaction) {
+        (Action::Cooperate, Action::Cooperate) | (Action::Defect, Action::Defect) => {
+            let points = if action == Action::Cooperate { 3 } else { 1 };
+            (points, points)
+        }
+        (_, _) => {
+            let (defector, cooperator) = if action == Action::Defect {
+                (5, 0)
+            } else {
+                (0, 5)
+            };
+            (defector, cooperator)
         }
     }
-
-    return (i_score, j_score);
 }
 
 /// 顾名思义 -- As the name suggests
