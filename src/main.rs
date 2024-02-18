@@ -12,17 +12,14 @@ mod strategies;
 fn main() {
     let parameters = parse_args();
 
-    // Get two lists of strategies to iterate over. All strategies battle all strategies, including self.
-    let mut strategies = get_strategies();
-    let mut strategies2 = get_strategies();
-
     // Keep a list of the scores
     let mut scores: HashMap<String, i32> = HashMap::new();
 
     println!("Starting tournament");
 
-    for i in &mut strategies {
-        for j in &mut strategies2 {
+    // Get two lists of strategies to iterate over. All strategies battle all strategies, including self.
+    for i in &mut get_strategies() {
+        for j in &mut get_strategies() {
             let (i_score, j_score) = battle(i, j, &parameters);
             add_score(&mut scores, i.name(), i_score);
             add_score(&mut scores, j.name(), j_score);
