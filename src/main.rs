@@ -32,13 +32,12 @@ fn main() {
 
     print_scores(&scores);
 }
-
 struct Parameters {
     iterations: i32,
     verbose: bool,
 }
 
-// Parse command line parameter --iterations
+/// Parse command line parameter --iterations and --verbose
 fn parse_args() -> Parameters {
     let args: Vec<String> = env::args().collect();
     let mut iterations = 20; // Default value
@@ -137,6 +136,10 @@ fn print_scores(scores: &HashMap<StrategyEnum, i32>) {
     }
 }
 
+/// An iterator over the strategies
+///
+/// Unfortunately, we can't use the derive macro to implement the iterator trait for the enum,
+/// so we have to implement it manually.
 impl StrategyEnum {
     pub fn iter() -> impl Iterator<Item = StrategyEnum> {
         let variants = [
@@ -159,6 +162,22 @@ pub enum StrategyEnum {
     AlwaysDefect,
 }
 
+/// Returns a new strategy based on the enum
+///
+/// # Arguments
+///     * `strategy_enum` - The enum of the strategy to be returned
+///
+/// # Returns
+///     * A new strategy based on the enum
+///
+/// # Example
+/// ```
+/// let strategy = get_strategy(StrategyEnum::AlwaysCooperate);
+/// ```
+///
+/// # Note
+/// This function must return a Box<dyn Strategy> because the strategies are of different types
+/// and we want to return a trait object.
 fn get_strategy(strategy_enum: StrategyEnum) -> Box<dyn Strategy> {
     match strategy_enum {
         StrategyEnum::AlwaysCooperate => Box::new(AlwaysCooperate::new()),
