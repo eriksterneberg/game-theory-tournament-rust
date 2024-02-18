@@ -18,10 +18,6 @@ impl Scoreboard {
             .or_insert(score);
     }
 
-    fn sum_scores(&self) -> i32 {
-        self.0.values().copied().sum()
-    }
-
     fn sorted_scores(&self) -> Vec<(i32, StrategyEnum)> {
         let mut sorted_scores: Vec<_> = self
             .0

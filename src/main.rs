@@ -1,4 +1,4 @@
-use crate::enums::StrategyEnum;
+use crate::enums::{get_strategies, StrategyEnum};
 use crate::scoreboard::Scoreboard;
 use crate::strategies::always_cooperate::AlwaysCooperate;
 use crate::strategies::always_defect::AlwaysDefect;
@@ -13,16 +13,13 @@ mod enums;
 mod scoreboard;
 mod strategies;
 
-static STRATEGIES: [StrategyEnum; 5] = [
-    StrategyEnum::AlwaysCooperate,
-    StrategyEnum::HoldsGrudge,
-    StrategyEnum::TitForTat,
-    StrategyEnum::TitFor2Tats,
-    StrategyEnum::AlwaysDefect,
-];
-
 fn main() {
     let parameters = parse_args();
+
+    println!("Strategies: {:?}", get_strategies());
+
+    let strategies = get_strategies();
+    let strategies2 = get_strategies();
 
     // Keep a list of the scores
     let mut score_board = Scoreboard::default();
@@ -30,7 +27,7 @@ fn main() {
     println!("Starting tournament");
 
     // All strategies battle all strategies, including itself
-    for (i, j) in iproduct!(STRATEGIES, STRATEGIES) {
+    for (i, j) in iproduct!(strategies, strategies2) {
         let (i_score, j_score) = battle(i, j, parameters);
 
         score_board.add_score(i, i_score);
