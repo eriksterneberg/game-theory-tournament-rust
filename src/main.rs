@@ -19,8 +19,8 @@ fn main() {
 
     // Get two lists of strategies to iterate over. All strategies battle all strategies, including self.
     // Use iterator instead of function that returns vector for memory efficiency
-    for i in (StrategyEnumIterator { index: 0 }) {
-        for j in (StrategyEnumIterator { index: 0 }) {
+    for i in StrategyEnum::iter() {
+        for j in StrategyEnum::iter() {
             let (i_score, j_score) = battle(i, j, &parameters);
             add_score(&mut scores, i, i_score);
             add_score(&mut scores, j, j_score);
@@ -141,26 +141,16 @@ pub struct StrategyEnumIterator {
     index: usize,
 }
 
-impl Iterator for StrategyEnumIterator {
-    type Item = StrategyEnum;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let next_strategy = match self.index {
-            0 => StrategyEnum::AlwaysCooperate,
-            1 => StrategyEnum::HoldsGrudge,
-            2 => StrategyEnum::TitForTat,
-            3 => StrategyEnum::TitFor2Tats,
-            4 => StrategyEnum::AlwaysDefect,
-            _ => return None,
-        };
-        self.index += 1;
-        Some(next_strategy)
-    }
-}
-
 impl StrategyEnum {
-    pub fn iter() -> StrategyEnumIterator {
-        StrategyEnumIterator { index: 0 }
+    pub fn iter() -> impl Iterator<Item = StrategyEnum> {
+        let variants = [
+            StrategyEnum::AlwaysCooperate,
+            StrategyEnum::HoldsGrudge,
+            StrategyEnum::TitForTat,
+            StrategyEnum::TitFor2Tats,
+            StrategyEnum::AlwaysDefect,
+        ];
+        variants.into_iter()
     }
 }
 
@@ -173,8 +163,8 @@ pub enum StrategyEnum {
     AlwaysDefect,
 }
 
-fn get_strategy(strategy: StrategyEnum) -> Box<dyn Strategy> {
-    match strategy {
+fn get_strategy(strategy_enum: StrategyEnum) -> Box<dyn Strategy> {
+    match strategy_enum {
         StrategyEnum::AlwaysCooperate => Box::new(AlwaysCooperate::new()),
         StrategyEnum::HoldsGrudge => Box::new(HoldsGrudge::new()),
         StrategyEnum::TitForTat => Box::new(TitForTat::new()),
