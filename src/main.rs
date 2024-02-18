@@ -18,9 +18,10 @@ fn main() {
     println!("Starting tournament");
 
     // Get two lists of strategies to iterate over. All strategies battle all strategies, including self.
-    for i in &mut get_strategies() {
-        for j in &mut get_strategies() {
-            let (i_score, j_score) = battle(i, j, &parameters);
+    // Use iterator instead of function that returns vector for memory efficiency
+    for mut i in (StrategiesIterator { index: 0 }) {
+        for mut j in (StrategiesIterator { index: 0 }) {
+            let (i_score, j_score) = battle(&mut i, &mut j, &parameters);
             add_score(&mut scores, i.name(), i_score);
             add_score(&mut scores, j.name(), j_score);
         }
@@ -125,28 +126,6 @@ fn battle(
     return (i_score, j_score);
 }
 
-/// Get all strategies
-///
-/// It is not possible to copy an array, so instead we return a vector of boxes.
-/// Why boxes? Because we want to return a vector of different types,
-/// and the only way to do that is to use a trait object.
-///
-/// Copilot says:
-/// A trait object is a pointer to a trait, which can be used to call the methods of the trait.
-/// In this case, we are returning a vector of boxes that contain a trait object.
-/// This means that we can call the methods of the trait on the objects in the vector.
-/// The trait object is a pointer to the trait, and the box is a pointer to the object.
-/// This is the only way to return a vector of different types.
-fn get_strategies() -> Vec<Box<dyn Strategy>> {
-    vec![
-        Box::new(AlwaysCooperate::new()),
-        Box::new(HoldsGrudge::new()),
-        Box::new(TitForTat::new()),
-        Box::new(TitFor2Tats::new()),
-        Box::new(AlwaysDefect::new()),
-    ]
-}
-
 /// 顾名思义 -- As the name suggests
 fn add_score(scores: &mut HashMap<String, i32>, player: String, score: i32) {
     let entry = scores.entry(String::from(player)).or_insert(0);
@@ -160,5 +139,34 @@ fn print_scores(scores: &HashMap<String, i32>) {
 
     for (player, score) in &scores {
         println!("{}\t{}", score, player);
+    }
+}
+
+struct StrategiesIterator {
+    index: usize,
+}
+
+/// Get all strategies
+impl Iterator for StrategiesIterator {
+    type Item = Box<dyn Strategy>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // Define a function to create the next strategy lazily
+        fn create_strategy(index: usize) -> Option<Box<dyn Strategy>> {
+            match index {
+                0 => Some(Box::new(AlwaysCooperate::new())),
+                1 => Some(Box::new(HoldsGrudge::new())),
+                2 => Some(Box::new(TitForTat::new())),
+                3 => Some(Box::new(TitFor2Tats::new())),
+                4 => Some(Box::new(AlwaysDefect::new())),
+                _ => None,
+            }
+        }
+
+        // Increment the index for the next strategy
+        self.index += 1;
+
+        // Return the next strategy
+        create_strategy(self.index - 1)
     }
 }
