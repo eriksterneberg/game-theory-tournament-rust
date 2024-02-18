@@ -9,18 +9,24 @@ pub enum StrategyEnum {
     AlwaysDefect,
 }
 
+/// We implement a function to get all the strategies because Rust doesn't actually allow you
+/// to iterate over an enum. This is a workaround.
+///
+/// Why does Rust not allow you to iterate over Enums? Because enums are algebraic data types.
+/// For instance, you can't iterate over this Enum in any meaningful way:
+///
+/// enum Option<T> {
+//     None,
+//     Some(T)
+// }
 pub fn get_strategies() -> Vec<StrategyEnum> {
     let mut strategies = Vec::new();
 
-    let mut prev = StrategyEnum::first().unwrap();
+    let mut prev = StrategyEnum::first();
 
-    loop {
-        strategies.push(prev);
-
-        prev = match prev.next() {
-            Some(s) => s,
-            None => break,
-        };
+    while let Some(prev_) = prev {
+        strategies.push(prev_);
+        prev = prev_.next();
     }
 
     strategies
