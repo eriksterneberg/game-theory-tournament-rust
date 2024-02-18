@@ -13,17 +13,17 @@ fn main() {
     let parameters = parse_args();
 
     // Keep a list of the scores
-    let mut scores: HashMap<String, i32> = HashMap::new();
+    let mut scores: HashMap<StrategyEnum, i32> = HashMap::new();
 
     println!("Starting tournament");
 
     // Get two lists of strategies to iterate over. All strategies battle all strategies, including self.
     // Use iterator instead of function that returns vector for memory efficiency
-    for mut i in (StrategiesIterator { index: 0 }) {
-        for mut j in (StrategiesIterator { index: 0 }) {
-            let (i_score, j_score) = battle(&mut i, &mut j, &parameters);
-            add_score(&mut scores, i.name(), i_score);
-            add_score(&mut scores, j.name(), j_score);
+    for i in (StrategyEnumIterator { index: 0 }) {
+        for j in (StrategyEnumIterator { index: 0 }) {
+            let (i_score, j_score) = battle(i, j, &parameters);
+            add_score(&mut scores, i, i_score);
+            add_score(&mut scores, j, j_score);
         }
     }
 
@@ -71,14 +71,9 @@ fn parse_args() -> Parameters {
 /// If both sides cooperate, they each score 3 points.
 /// If one side defects while the other cooperates, they get 5 and 0 points respectively
 /// If both sides defect, they each score just 1 point.
-fn battle(
-    i: &mut Box<dyn Strategy>,
-    j: &mut Box<dyn Strategy>,
-    parameters: &Parameters,
-) -> (i32, i32) {
-    // Reset the strategies for the next round
-    i.reset();
-    j.reset();
+fn battle(i_name: StrategyEnum, j_name: StrategyEnum, parameters: &Parameters) -> (i32, i32) {
+    let mut i = get_strategy(i_name);
+    let mut j = get_strategy(j_name);
 
     if parameters.verbose {
         println!("Executing battle: {} vs {}", i.name(), j.name());
@@ -127,46 +122,63 @@ fn battle(
 }
 
 /// 顾名思义 -- As the name suggests
-fn add_score(scores: &mut HashMap<String, i32>, player: String, score: i32) {
-    let entry = scores.entry(String::from(player)).or_insert(0);
+fn add_score(scores: &mut HashMap<StrategyEnum, i32>, player: StrategyEnum, score: i32) {
+    let entry = scores.entry(player).or_insert(0);
     *entry += score;
 }
 
 /// 顾名思义 -- As the name suggests
-fn print_scores(scores: &HashMap<String, i32>) {
+fn print_scores(scores: &HashMap<StrategyEnum, i32>) {
     let mut scores: Vec<_> = scores.into_iter().collect();
     scores.sort_by(|a, b| b.1.cmp(&a.1));
 
     for (player, score) in &scores {
-        println!("{}\t{}", score, player);
+        println!("{}\t{:?}", score, player);
     }
 }
 
-struct StrategiesIterator {
+pub struct StrategyEnumIterator {
     index: usize,
 }
 
-/// Get all strategies
-impl Iterator for StrategiesIterator {
-    type Item = Box<dyn Strategy>;
+impl Iterator for StrategyEnumIterator {
+    type Item = StrategyEnum;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // Define a function to create the next strategy lazily
-        fn create_strategy(index: usize) -> Option<Box<dyn Strategy>> {
-            match index {
-                0 => Some(Box::new(AlwaysCooperate::new())),
-                1 => Some(Box::new(HoldsGrudge::new())),
-                2 => Some(Box::new(TitForTat::new())),
-                3 => Some(Box::new(TitFor2Tats::new())),
-                4 => Some(Box::new(AlwaysDefect::new())),
-                _ => None,
-            }
-        }
-
-        // Increment the index for the next strategy
+        let next_strategy = match self.index {
+            0 => StrategyEnum::AlwaysCooperate,
+            1 => StrategyEnum::HoldsGrudge,
+            2 => StrategyEnum::TitForTat,
+            3 => StrategyEnum::TitFor2Tats,
+            4 => StrategyEnum::AlwaysDefect,
+            _ => return None,
+        };
         self.index += 1;
+        Some(next_strategy)
+    }
+}
 
-        // Return the next strategy
-        create_strategy(self.index - 1)
+impl StrategyEnum {
+    pub fn iter() -> StrategyEnumIterator {
+        StrategyEnumIterator { index: 0 }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum StrategyEnum {
+    AlwaysCooperate,
+    HoldsGrudge,
+    TitForTat,
+    TitFor2Tats,
+    AlwaysDefect,
+}
+
+fn get_strategy(strategy: StrategyEnum) -> Box<dyn Strategy> {
+    match strategy {
+        StrategyEnum::AlwaysCooperate => Box::new(AlwaysCooperate::new()),
+        StrategyEnum::HoldsGrudge => Box::new(HoldsGrudge::new()),
+        StrategyEnum::TitForTat => Box::new(TitForTat::new()),
+        StrategyEnum::TitFor2Tats => Box::new(TitFor2Tats::new()),
+        StrategyEnum::AlwaysDefect => Box::new(AlwaysDefect::new()),
     }
 }
