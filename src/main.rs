@@ -13,6 +13,8 @@ mod enums;
 mod scoreboard;
 mod strategies;
 
+type Score = i32;
+
 fn main() {
     let parameters = parse_args();
 
@@ -24,7 +26,6 @@ fn main() {
     // All strategies battle all strategies, including itself
     for (i, j) in iproduct!(get_strategies(), get_strategies()) {
         let (i_score, j_score) = battle(i, j, parameters);
-
         score_board.add_score(i, i_score);
         score_board.add_score(j, j_score);
     }
@@ -37,8 +38,17 @@ struct Parameters {
     verbose: bool,
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self {
+            iterations: 20,
+            verbose: false,
+        }
+    }
+}
+
 /// Executes battle between two strategies
-fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) -> (i32, i32) {
+fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) -> (Score, Score) {
     if parameters.verbose {
         println!("Executing battle: {:?} vs {:?}", i_enum, j_enum);
     }
@@ -61,7 +71,7 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
         let (i_, j_) = score(action_i, action_j);
 
         // Return the updated scores
-        ((i_score + i_), (j_score + j_))
+        (i_score + i_, j_score + j_)
     })
 }
 
@@ -71,7 +81,7 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
 /// - If both sides cooperate, they each score 3 points.
 /// - If one side defects while the other cooperates, they get 5 and 0 points respectively
 /// - If both sides defect, they each score just 1 point.
-fn score(action: Action, reaction: Action) -> (i32, i32) {
+fn score(action: Action, reaction: Action) -> (Score, Score) {
     match (action, reaction) {
         (Action::Cooperate, Action::Cooperate) => (3, 3),
         (Action::Defect, Action::Defect) => (1, 1),
@@ -98,10 +108,7 @@ fn get_strategy(strategy_enum: StrategyEnum) -> Box<dyn Strategy> {
 /// Parse command line parameter --iterations and --verbose
 fn parse_args() -> Parameters {
     let mut args = env::args().peekable();
-    let mut parameters = Parameters {
-        iterations: 20,
-        verbose: false,
-    };
+    let mut parameters = Parameters::default();
 
     while let Some(arg) = args.next() {
         match arg.as_str() {
