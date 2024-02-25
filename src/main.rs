@@ -13,8 +13,7 @@ mod scoreboard;
 mod strategies;
 mod types;
 mod logging;
-mod main_test;
-
+mod tests;
 
 fn main() -> Result<()> {
     logging::init()?;
