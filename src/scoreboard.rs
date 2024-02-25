@@ -1,4 +1,4 @@
-use crate::enums::StrategyEnum;
+use crate::strategies::enums::StrategyEnum;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
