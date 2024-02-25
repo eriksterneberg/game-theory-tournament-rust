@@ -8,12 +8,13 @@ use crate::strategies::tit_for_two_tats::TitFor2Tats;
 use crate::strategies::{Action, Strategy};
 use clap::Parser;
 use itertools::iproduct;
+use crate::types::{Score, Parameters};
 
 mod enums;
 mod scoreboard;
 mod strategies;
+mod types;
 
-type Score = i32;
 
 fn main() {
     let parameters = Parameters::parse();
@@ -21,7 +22,9 @@ fn main() {
     // Keep a list of the scores
     let mut score_board = Scoreboard::default();
 
-    println!("Starting tournament");
+    if parameters.verbose {
+        println!("Starting tournament");
+    }
 
     // All strategies battle all strategies, including itself
     for (i, j) in iproduct!(get_strategies(), get_strategies()) {
@@ -33,14 +36,6 @@ fn main() {
     score_board.print_scores();
 }
 
-#[derive(Clone, Copy, Parser)]
-struct Parameters {
-    #[arg(short = 'i', long = "iterations", default_value = "200")]
-    iterations: i32,
-
-    #[arg(short = 'v', long = "verbose")]
-    verbose: bool,
-}
 
 /// Executes battle between two strategies
 fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) -> (Score, Score) {
