@@ -1,7 +1,7 @@
 use crate::strategies::{Action, Strategy};
 
 #[derive(Debug)]
-
+/// When the opponent defects twice in a row, defect until the opponent cooperates.
 pub struct TitFor2Tats {
     patience: i32,
 }

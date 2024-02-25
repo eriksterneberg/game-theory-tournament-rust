@@ -1,7 +1,7 @@
 use crate::strategies::{Action, Strategy};
 
 #[derive(Debug)]
-
+/// When the opponent cooperates, cooperate. When the opponent defects, retaliate.
 pub struct TitForTat {
     pub retaliate: bool,
 }

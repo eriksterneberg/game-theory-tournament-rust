@@ -1,7 +1,9 @@
+use std::thread::sleep;
 use strategies::enums::{get_strategies, StrategyEnum};
 use crate::scoreboard::Scoreboard;
-use crate::strategies::{Action, get_strategy, Strategy};
+use crate::strategies::{Action, get_strategy};
 use clap::Parser;
+use indicatif::{ProgressBar, ProgressStyle};
 use itertools::iproduct;
 use crate::types::{Parameters, Score};
 
@@ -32,7 +34,7 @@ fn main() {
     }
 
     if parameters.verbose {
-        println!("Tournament finished");
+        println!("Tournament finished! Total scores:");
     }
 
     board.print_scores();
@@ -48,8 +50,17 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
     // Create strategies
     let (mut i, mut j) = (get_strategy(i_enum), get_strategy(j_enum));
 
+    let bar = ProgressBar::new(parameters.iterations as u64);
+    bar.set_message(format!("{:?} vs {:?}", i_enum, j_enum));
+    bar.set_style(ProgressStyle::default_bar()
+        .template("{spinner:.red} [{elapsed_precise}] [{bar:40.red/pink}] {percent}% {msg}").unwrap());
+
     // Fold over the range of iterations to accumulate scores
-    (0..parameters.iterations).fold((0, 0), |(i_score, j_score), _| {
+    let scores = (0..parameters.iterations).fold((0, 0), |(i_score, j_score), _| {
+        if parameters.verbose {
+            bar.inc(1);
+            sleep(std::time::Duration::from_millis(1));
+        }
 
         // Players make moves independently
         let (action_i, action_j) = (i.get(), j.get());
@@ -63,7 +74,19 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
 
         // Return the updated scores
         (i_score + i_, j_score + j_)
-    })
+    });
+
+    if parameters.verbose {
+        if scores.0 > scores.1 {
+            bar.finish_with_message(format!("{:?} won", i_enum));
+        } else if scores.0 < scores.1 {
+            bar.finish_with_message(format!("{:?} won", j_enum));
+        } else {
+            bar.finish_with_message("Draw".to_string());
+        }
+    }
+
+    scores
 }
 
 /// Scores the actions of two players
