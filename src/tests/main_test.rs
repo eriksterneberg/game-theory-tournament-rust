@@ -24,11 +24,9 @@ fn test_two_positive_strategies_always_cooperate(iterations: i64, i: i32, j: i32
     assert_eq!(results, expected);
 }
 
-// use assert_fs::prelude::*;
-
 /// Test the binary runs without error
 ///
-/// Currently the binary writes logs to STDERR. If that is changed, this test needs to be updated.
+/// Currently, the binary writes logs to STDERR. If that is changed, this test needs to be updated.
 #[test]
 fn run_binary() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gamett")?;
