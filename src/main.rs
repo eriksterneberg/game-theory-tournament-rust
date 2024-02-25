@@ -6,6 +6,7 @@ use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
 use itertools::iproduct;
 use crate::types::{Parameters, Score};
+use log::{info, debug, warn, trace};
 
 mod scoreboard;
 mod strategies;
@@ -15,12 +16,20 @@ mod types;
 fn main() {
     let parameters = Parameters::parse();
 
+    if parameters.verbose.is_present() {
+        pretty_env_logger::formatted_builder()
+            .filter_level(log::LevelFilter::Trace)
+            .init();
+    } else {
+        pretty_env_logger::formatted_builder()
+            .filter_level(log::LevelFilter::Info)
+            .init();
+    }
+
     // Keep a list of the scores
     let mut board = Scoreboard::default();
 
-    if parameters.verbose {
-        println!("Starting tournament");
-    }
+    info!("Starting tournament");
 
     // All strategies battle all strategies, including itself
     for (i, j) in iproduct!(get_strategies(), get_strategies()) {
@@ -28,24 +37,20 @@ fn main() {
             continue;
         }
 
-        let (i_score, j_score) = battle(i, j, parameters);
+        let (i_score, j_score) = battle(i, j, &parameters);
         board.add_score(i, i_score);
         board.add_score(j, j_score);
     }
 
-    if parameters.verbose {
-        println!("Tournament finished! Total scores:");
-    }
+    info!("Tournament finished! Total scores:");
 
     board.print_scores();
 }
 
 
 /// Executes battle between two strategies
-fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) -> (Score, Score) {
-    if parameters.verbose {
-        println!("Executing battle: {:?} vs {:?}", i_enum, j_enum);
-    }
+fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -> (Score, Score) {
+    trace!("Executing battle: {:?} vs {:?}", i_enum, j_enum);
 
     // Create strategies
     let (mut i, mut j) = (get_strategy(i_enum), get_strategy(j_enum));
@@ -57,7 +62,7 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
 
     // Fold over the range of iterations to accumulate scores
     let scores = (0..parameters.iterations).fold((0, 0), |(i_score, j_score), _| {
-        if parameters.verbose {
+        if parameters.verbose.is_present() {
             bar.inc(1);
             sleep(std::time::Duration::from_millis(1));
         }
@@ -76,7 +81,7 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: Parameters) ->
         (i_score + i_, j_score + j_)
     });
 
-    if parameters.verbose {
+    if parameters.verbose.is_present() {
         if scores.0 > scores.1 {
             bar.finish_with_message(format!("{:?} won", i_enum));
         } else if scores.0 < scores.1 {

@@ -1,5 +1,6 @@
 use crate::strategies::enums::StrategyEnum;
 use std::collections::HashMap;
+use log::info;
 
 #[derive(Debug, Clone)]
 pub struct Scoreboard(HashMap<StrategyEnum, i32>);
@@ -30,7 +31,7 @@ impl Scoreboard {
 
     pub fn print_scores(&self) {
         for (score, player) in self.sorted_scores() {
-            println!("{}\t{:?}", score, player);
+            info!("{}\t{:?}", score, player);
         }
     }
 }
