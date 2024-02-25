@@ -1,3 +1,7 @@
+use std::process::Command;
+use assert_cmd::assert::OutputAssertExt;
+use assert_cmd::cargo::CommandCargoExt;
+use predicates::prelude::predicate;
 use rstest::rstest;
 use crate::battle;
 use crate::strategies::enums::StrategyEnum::{AlwaysDefect, TitFor2Tats, TitForTat};
@@ -18,4 +22,19 @@ fn test_two_positive_strategies_always_cooperate(iterations: i64, i: i32, j: i32
     let expected = (i, j);
     let results = battle(TitForTat, TitFor2Tats, iterations, false);
     assert_eq!(results, expected);
+}
+
+// use assert_fs::prelude::*;
+
+/// Test the binary runs without error
+///
+/// Currently the binary writes logs to STDERR. If that is changed, this test needs to be updated.
+#[test]
+fn run_binary() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gamett")?;
+    cmd.assert()
+        .success()
+        .stderr(predicate::str::contains("Tournament finished"));
+
+    Ok(())
 }

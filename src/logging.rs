@@ -3,7 +3,14 @@ use log::Level;
 use thiserror::Error;
 
 pub fn init() -> anyhow::Result<(), LogLevelError> {
-    let log_level_str = env::var("RUST_LOG").map_err(|_| LogLevelError::EnvVarNotSet)?;
+    // let log_level_str = env::var("RUST_LOG").map_err(|_| LogLevelError::EnvVarNotSet)?;
+
+    let log_level_str = env::var("RUST_LOG").unwrap_or_else(|_| {
+        env::set_var("RUST_LOG", "info");
+        println!("Environment variable 'RUST_LOG' not set. Defaulting to 'info'. Run `export RUST_LOG=info` to set log level to 'info' or lower to silence this message.");
+        "info".to_string()
+    });
+
     let log_level = log_level_str.parse::<Level>().map_err(|_| LogLevelError::ParseError)?;
 
     if log_level < Level::Info {
@@ -21,6 +28,6 @@ pub enum LogLevelError {
     LogLevelTooHigh,
     #[error("Failed to parse log level")]
     ParseError,
-    #[error("Set environment variable 'RUST_LOG' to 'info' or lower to run this program")]
-    EnvVarNotSet,
+    // #[error("Set environment variable 'RUST_LOG' to 'info' or lower to run this program")]
+    // EnvVarNotSet,
 }

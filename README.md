@@ -14,12 +14,6 @@ A strategy has memory and can make decisions based on the history of each battle
 
 ## How to run
 
-First set log level:
-
-```bash
-export RUST_LOG=info
-```
-
 Run with default parameters (200 iterations, no verbose):
 
 ```bash
