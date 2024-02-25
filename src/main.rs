@@ -1,4 +1,3 @@
-use std::env;
 use std::thread::sleep;
 use strategies::enums::{get_strategies, StrategyEnum};
 use crate::scoreboard::Scoreboard;
@@ -7,14 +6,14 @@ use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
 use itertools::iproduct;
 use crate::types::{Parameters, Score};
-use log::{info, Level};
+use log::{info, trace};
 use anyhow::{Result};
-use thiserror::Error;
 
 mod scoreboard;
 mod strategies;
 mod types;
 mod logging;
+mod main_test;
 
 
 fn main() -> Result<()> {
@@ -29,10 +28,11 @@ fn main() -> Result<()> {
     // All strategies battle all strategies, including itself
     for (i, j) in iproduct!(get_strategies(), get_strategies()) {
         if i == j {
+            trace!("Skipping self battle");
             continue;
         }
 
-        let (i_score, j_score) = battle(i, j, &parameters);
+        let (i_score, j_score) = battle(i, j, parameters.iterations, parameters.verbose.is_present());
         board.add_score(i, i_score);
         board.add_score(j, j_score);
     }
@@ -46,18 +46,20 @@ fn main() -> Result<()> {
 
 
 /// Executes battle between two strategies
-fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -> (Score, Score) {
+fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, iterations: i64, verbose: bool) -> (Score, Score) {
 
     // Create strategies
     let (mut i, mut j) = (get_strategy(i_enum), get_strategy(j_enum));
 
-    let bar = ProgressBar::new(parameters.iterations as u64);
+    trace!("Starting battle {:?} vs {:?}", i_enum, j_enum);
+
+    let bar = ProgressBar::new(iterations as u64);
     bar.set_style(ProgressStyle::default_bar()
         .template("{spinner:.red} [{elapsed_precise}] [{bar:40.red/pink}] {percent}% {msg}").unwrap());
 
     // Fold over the range of iterations to accumulate scores
-    let scores = (0..parameters.iterations).fold((0, 0), |(i_score, j_score), _| {
-        if parameters.verbose.is_present() {
+    let scores = (0..iterations).fold((0, 0), |(i_score, j_score), _| {
+        if verbose {
             bar.inc(1);
             bar.set_message(format!("{:?} vs {:?}", i_enum, j_enum));
             sleep(std::time::Duration::from_millis(1));
@@ -77,7 +79,7 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -
         (i_score + i_, j_score + j_)
     });
 
-    if parameters.verbose.is_present() {
+    if verbose {
         let prefix = format!("{:?} vs {:?}:", i_enum, j_enum);
         if scores.0 > scores.1 {
             bar.finish_with_message(format!("{} {:?} won", prefix, i_enum));

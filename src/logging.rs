@@ -21,6 +21,6 @@ pub enum LogLevelError {
     LogLevelTooHigh,
     #[error("Failed to parse log level")]
     ParseError,
-    #[error("Environment variable 'RUST_LOG' is not set")]
+    #[error("Set environment variable 'RUST_LOG' to 'info' or lower to run this program")]
     EnvVarNotSet,
 }
