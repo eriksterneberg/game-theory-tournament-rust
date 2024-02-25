@@ -6,8 +6,8 @@ use crate::strategies::holds_grudge::HoldsGrudge;
 use crate::strategies::tit_for_tat::TitForTat;
 use crate::strategies::tit_for_two_tats::TitFor2Tats;
 use crate::strategies::{Action, Strategy};
+use clap::Parser;
 use itertools::iproduct;
-use std::env;
 
 mod enums;
 mod scoreboard;
@@ -16,7 +16,7 @@ mod strategies;
 type Score = i32;
 
 fn main() {
-    let parameters = parse_args();
+    let parameters = Parameters::parse();
 
     // Keep a list of the scores
     let mut score_board = Scoreboard::default();
@@ -32,19 +32,14 @@ fn main() {
 
     score_board.print_scores();
 }
-#[derive(Clone, Copy)]
-struct Parameters {
-    iterations: i32,
-    verbose: bool,
-}
 
-impl Default for Parameters {
-    fn default() -> Self {
-        Self {
-            iterations: 20,
-            verbose: false,
-        }
-    }
+#[derive(Clone, Copy, Parser)]
+struct Parameters {
+    #[arg(short = 'i', long = "iterations", default_value = "200")]
+    iterations: i32,
+
+    #[arg(short = 'v', long = "verbose")]
+    verbose: bool,
 }
 
 /// Executes battle between two strategies
@@ -103,25 +98,4 @@ fn get_strategy(strategy_enum: StrategyEnum) -> Box<dyn Strategy> {
         StrategyEnum::TitFor2Tats => Box::new(TitFor2Tats::new()),
         StrategyEnum::AlwaysDefect => Box::new(AlwaysDefect::new()),
     }
-}
-
-/// Parse command line parameter --iterations and --verbose
-fn parse_args() -> Parameters {
-    let mut args = env::args().peekable();
-    let mut parameters = Parameters::default();
-
-    while let Some(arg) = args.next() {
-        match arg.as_str() {
-            "--iterations" => {
-                parameters.iterations =
-                    args.next().and_then(|s| s.parse().ok()).unwrap_or_else(|| {
-                        eprintln!("Error: Invalid value for iterations");
-                        std::process::exit(1);
-                    });
-            }
-            "--verbose" => parameters.verbose = true,
-            _ => (),
-        }
-    }
-    parameters
 }
