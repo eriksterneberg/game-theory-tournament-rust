@@ -1,3 +1,4 @@
+use std::env;
 use std::thread::sleep;
 use strategies::enums::{get_strategies, StrategyEnum};
 use crate::scoreboard::Scoreboard;
@@ -6,25 +7,19 @@ use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
 use itertools::iproduct;
 use crate::types::{Parameters, Score};
-use log::{info, debug, warn, trace};
+use log::{info, Level};
+use anyhow::{Result};
+use thiserror::Error;
 
 mod scoreboard;
 mod strategies;
 mod types;
+mod logging;
 
 
-fn main() {
+fn main() -> Result<()> {
+    logging::init()?;
     let parameters = Parameters::parse();
-
-    if parameters.verbose.is_present() {
-        pretty_env_logger::formatted_builder()
-            .filter_level(log::LevelFilter::Trace)
-            .init();
-    } else {
-        pretty_env_logger::formatted_builder()
-            .filter_level(log::LevelFilter::Info)
-            .init();
-    }
 
     // Keep a list of the scores
     let mut board = Scoreboard::default();
@@ -45,18 +40,18 @@ fn main() {
     info!("Tournament finished! Total scores:");
 
     board.print_scores();
+
+    Ok(())
 }
 
 
 /// Executes battle between two strategies
 fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -> (Score, Score) {
-    trace!("Executing battle: {:?} vs {:?}", i_enum, j_enum);
 
     // Create strategies
     let (mut i, mut j) = (get_strategy(i_enum), get_strategy(j_enum));
 
     let bar = ProgressBar::new(parameters.iterations as u64);
-    bar.set_message(format!("{:?} vs {:?}", i_enum, j_enum));
     bar.set_style(ProgressStyle::default_bar()
         .template("{spinner:.red} [{elapsed_precise}] [{bar:40.red/pink}] {percent}% {msg}").unwrap());
 
@@ -64,6 +59,7 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -
     let scores = (0..parameters.iterations).fold((0, 0), |(i_score, j_score), _| {
         if parameters.verbose.is_present() {
             bar.inc(1);
+            bar.set_message(format!("{:?} vs {:?}", i_enum, j_enum));
             sleep(std::time::Duration::from_millis(1));
         }
 
@@ -82,12 +78,13 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, parameters: &Parameters) -
     });
 
     if parameters.verbose.is_present() {
+        let prefix = format!("{:?} vs {:?}:", i_enum, j_enum);
         if scores.0 > scores.1 {
-            bar.finish_with_message(format!("{:?} won", i_enum));
+            bar.finish_with_message(format!("{} {:?} won", prefix, i_enum));
         } else if scores.0 < scores.1 {
-            bar.finish_with_message(format!("{:?} won", j_enum));
+            bar.finish_with_message(format!("{} {:?} won", prefix, j_enum));
         } else {
-            bar.finish_with_message("Draw".to_string());
+            bar.finish_with_message(format!("{} Draw", prefix));
         }
     }
 
