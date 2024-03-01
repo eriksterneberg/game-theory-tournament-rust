@@ -16,6 +16,8 @@ log = "0.4.20"
 pretty_env_logger = "0.5.0"
 anyhow = "1.0"
 thiserror = "1.0.57"
+crossbeam-channel = "0.5.11"
+ctrlc = "3.4"
 
 [dev-dependencies]
 rstest = "0.18.2"

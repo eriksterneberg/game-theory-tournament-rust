@@ -8,6 +8,9 @@ use itertools::iproduct;
 use crate::types::{Parameters, Score};
 use log::{info, trace};
 use anyhow::{Result};
+use crossbeam_channel::{bounded, tick, Receiver, select};
+use crossbeam_channel::internal::select;
+use ctrlc;
 
 mod scoreboard;
 mod strategies;
@@ -24,8 +27,21 @@ fn main() -> Result<()> {
 
     info!("Starting tournament");
 
-    // All strategies battle all strategies, including itself
+    let ctrl = ctrl_channel();
+
+    println!("Starting tournament, sleeping. Please wait...");
+    // sleep(std::time::Duration::from_millis(10000));
+
+    // All strategies battle all strategies
     for (i, j) in iproduct!(get_strategies(), get_strategies()) {
+        select! {
+            recv(ctrl) -> _ => {
+                println!("Battle interrupted");
+                std::process::exit(0);
+            },
+            default => {}
+        }
+
         if i == j {
             trace!("Skipping self battle");
             continue;
@@ -51,6 +67,7 @@ fn battle(i_enum: StrategyEnum, j_enum: StrategyEnum, iterations: i64, verbose: 
     let (mut i, mut j) = (get_strategy(i_enum), get_strategy(j_enum));
 
     trace!("Starting battle {:?} vs {:?}", i_enum, j_enum);
+
 
     let bar = ProgressBar::new(iterations as u64);
     bar.set_style(ProgressStyle::default_bar()
@@ -100,4 +117,12 @@ fn score(action: Action, reaction: Action) -> (Score, Score) {
         (Action::Cooperate, Action::Defect) => (0, 5), // player 1 cooperates, player 2 defects
         (Action::Defect, Action::Cooperate) => (5, 0), // player 1 defects, player 2 cooperates
     }
+}
+
+fn ctrl_channel() -> Receiver<()> {
+    let (tx, rx) = bounded(1);
+    ctrlc::set_handler(move || {
+        let _ = tx.send(());
+    }).expect("Error setting Ctrl-C handler");
+    rx
 }
